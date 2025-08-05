@@ -28,6 +28,11 @@ In this subsection, contact detection, force models, time integration, load bala
       set dynamic check frequency = 10000  # if method = dynamic
       set threshold               = 0.5    # if method = dynamic
 
+      subsection cell weight function
+        set Function expression = 1000
+      end
+    end
+
     # Particle-particle contact force model
     # Choices are linear|hertz_mindlin_limit_overlap|hertz_mindlin_limit_force|hertz|hertz_JKR|DMT
     set particle particle contact force method = hertz_mindlin_limit_overlap
@@ -56,8 +61,9 @@ In this subsection, contact detection, force models, time integration, load bala
     end
 
     # Solver type
-    # Choices are dem|cfd_dem
+    # Choices are dem|cfd_dem|dem_mp
     set solver type = dem
+    set disable position integration = false
   end
 
 
@@ -102,7 +108,7 @@ All contact force models are described in the :doc:`../../theory/multiphase/cfd_
 
 * ``particle particle contact force method`` controls the particle-particle contact force model. The following models are available in Lethe: ``hertz_mindlin_limit_overlap``, ``hertz_mindlin_limit_force``, ``hertz``, ``hertz_JKR``, ``DMT`` and ``linear``.
   
-* ``particle wall contact force method`` controls the particle-wall contact force model used. The following models are available: ``linear``, ``non-linear``, ``JKR`` and ``DMT``.
+* ``particle wall contact force method`` controls the particle-wall contact force model used. The following models are available: ``linear``, ``nonlinear``, ``JKR`` and ``DMT``.
 
 * ``dmt cut-off threshold`` controls the distance at witch the non contact forces are being negleted for the DMT cohesive force model.
 
@@ -113,7 +119,6 @@ All contact force models are described in the :doc:`../../theory/multiphase/cfd_
 
 * ``f coefficient`` is a model parameter used for the ``epsd_resistance`` model which controls the proportion of the viscous damping applied when full mobilization is reached.
 
-
 -----------------------
 Load Balancing
 -----------------------
@@ -123,9 +128,9 @@ Load-balancing updates the distribution of the subdomains between the processes 
 The total weight of each cell with particles in load-balancing is defined as:
 
 .. math::
-    W=1000+W_pn_p
+    W=W_pn_p + W_c
 
-where :math:`{W_p}` is the ``particle weight`` and :math:`{n_p}` is the number of particles in the cell. 1000 is the default weight assigned to one cell.
+where :math:`{W_p}` is the ``particle weight``, :math:`{n_p}` is the number of particles in the cell and :math:`{W_c}` the cell of a the cell. The subsection ``cell weight function`` defines the weight every cell according to the position of their barycenter. By default, 1000 is the default weight assigned to one cell.
 
 * ``particle weight`` must be defined for every ``load balance method``.
 
@@ -180,4 +185,6 @@ The ``load balance method`` may be set to ``dynamic_with_sparse_contacts`` and f
 -----------
 Solver Type
 -----------
-The "solver type" parameter controls the type of physic being solved by lethe. Currently, this parameter should always be set to "dem", which is the default value, even when solving a CFD-DEM problem.
+The ``solver type`` parameter controls the type of physic being solved by lethe. Currently, this parameter should be set to ``dem``, which is the default value, when solving a DEM or CFD-DEM problem. The ``dem_mp`` solver type is used for multiphysic DEM, which includes heat transfer.
+
+The ``disable position integration`` is used to freeze the position of particles. It is useful in multiphysic DEM simulations involving a packed bed. This allows to set a higher time step than in the loading of particles, since the temperature can take a lot more time to vary than the position.
